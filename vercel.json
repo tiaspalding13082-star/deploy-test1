@@ -2,7 +2,9 @@
   "buildCommand": "",
   "outputDirectory": "",
   "framework": null,
-  "rewrites": [
-    { "source": "/api/read-past-life", "destination": "/api/read-past-life" }
-  ]
+  "functions": {
+    "api/read-past-life.js": {
+      "includeFiles": "data/**"
+    }
+  }
 }

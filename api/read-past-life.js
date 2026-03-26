@@ -4,9 +4,10 @@ const path = require('path');
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const occupations = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'occupations.json'), 'utf-8'));
-const deaths = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'deaths.json'), 'utf-8'));
-const eras = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'eras.json'), 'utf-8'));
+const dataDir = path.join(__dirname, '..', 'data');
+const occupations = JSON.parse(fs.readFileSync(path.join(dataDir, 'occupations.json'), 'utf-8'));
+const deaths = JSON.parse(fs.readFileSync(path.join(dataDir, 'deaths.json'), 'utf-8'));
+const eras = JSON.parse(fs.readFileSync(path.join(dataDir, 'eras.json'), 'utf-8'));
 
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -75,7 +76,7 @@ module.exports = async function handler(req, res) {
       story,
     });
   } catch (err) {
-    console.error('OpenAI API error:', err.message);
-    res.status(500).json({ error: 'AI 스토리 생성 중 오류가 발생했습니다.' });
+    console.error('OpenAI API error:', err.message, err.status, err.code);
+    res.status(500).json({ error: 'AI 스토리 생성 중 오류가 발생했습니다.', detail: err.message });
   }
 };
