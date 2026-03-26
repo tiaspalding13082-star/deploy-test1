@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전생 리더기 - 당신의 전생을 알려드립니다</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0c0c1d 0%, #1a1a3e 30%, #2d1b4e 60%, #1a0a2e 100%);
+      color: #e0d6f0;
+      overflow-x: hidden;
+    }
+
+    .stars {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px; height: 2px;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle var(--duration) infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 1; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 60px;
+      margin-bottom: 8px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #c9a0ff, #ff9de2, #ffd700);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #9988bb;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .input-section {
+      width: 100%;
+      text-align: center;
+    }
+
+    .name-input {
+      width: 100%;
+      max-width: 360px;
+      padding: 16px 24px;
+      font-size: 18px;
+      font-family: 'Noto Sans KR', sans-serif;
+      border: 2px solid rgba(201, 160, 255, 0.3);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      text-align: center;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .name-input:focus {
+      border-color: rgba(201, 160, 255, 0.8);
+      box-shadow: 0 0 20px rgba(201, 160, 255, 0.2);
+    }
+
+    .name-input::placeholder { color: #665588; }
+
+    .read-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 16px 48px;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'Noto Sans KR', sans-serif;
+      color: #fff;
+      background: linear-gradient(135deg, #7b2ff7, #c840e9, #ff6fd8);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 20px rgba(123, 47, 247, 0.4);
+    }
+
+    .read-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(123, 47, 247, 0.6);
+    }
+
+    .read-btn:active { transform: translateY(0); }
+
+    .read-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Loading */
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .loading.show { display: block; }
+
+    .crystal-ball {
+      font-size: 80px;
+      animation: shake 0.5s ease-in-out infinite;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: rotate(-5deg); }
+      50% { transform: rotate(5deg); }
+    }
+
+    .loading-text {
+      margin-top: 16px;
+      font-size: 16px;
+      color: #c9a0ff;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* Result */
+    .result {
+      display: none;
+      width: 100%;
+      margin-top: 32px;
+      animation: fadeUp 0.8s ease-out;
+    }
+
+    .result.show { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-card {
+      background: linear-gradient(145deg, rgba(60, 30, 90, 0.6), rgba(30, 15, 60, 0.8));
+      border: 1px solid rgba(201, 160, 255, 0.2);
+      border-radius: 24px;
+      padding: 32px 24px;
+      backdrop-filter: blur(10px);
+    }
+
+    .result-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .result-name {
+      font-size: 24px;
+      font-weight: 900;
+      color: #ffd700;
+      margin-bottom: 4px;
+    }
+
+    .result-label {
+      font-size: 13px;
+      color: #9988bb;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .info-item {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .info-item.full { grid-column: 1 / -1; }
+
+    .info-emoji { font-size: 28px; margin-bottom: 6px; }
+
+    .info-label {
+      font-size: 11px;
+      color: #9988bb;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .info-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: #e0d6f0;
+    }
+
+    .story-section {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      line-height: 1.8;
+      font-size: 15px;
+      color: #d4c6ee;
+      white-space: pre-wrap;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .share-btn, .retry-btn {
+      padding: 12px 28px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Noto Sans KR', sans-serif;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .share-btn {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      color: white;
+      box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+    }
+
+    .share-btn:hover { transform: translateY(-2px); }
+
+    .copy-btn {
+      padding: 12px 28px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Noto Sans KR', sans-serif;
+      border: 2px solid rgba(201, 160, 255, 0.4);
+      border-radius: 50px;
+      background: transparent;
+      color: #c9a0ff;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(201, 160, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .retry-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: #c9a0ff;
+      border: 2px solid rgba(201, 160, 255, 0.3);
+    }
+
+    .retry-btn:hover {
+      background: rgba(201, 160, 255, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .error {
+      display: none;
+      text-align: center;
+      margin-top: 24px;
+      padding: 16px;
+      background: rgba(255, 50, 50, 0.15);
+      border: 1px solid rgba(255, 50, 50, 0.3);
+      border-radius: 12px;
+      color: #ff8888;
+    }
+
+    .error.show { display: block; }
+
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(60, 30, 90, 0.95);
+      color: #ffd700;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 700;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      transition: transform 0.3s ease;
+      z-index: 100;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    footer {
+      margin-top: auto;
+      padding-top: 40px;
+      text-align: center;
+      font-size: 12px;
+      color: #554477;
+    }
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+
+  <div class="container">
+    <div class="logo">🔮</div>
+    <h1>전생 리더기</h1>
+    <p class="subtitle">이름을 입력하면 당신의 전생을 알려드립니다</p>
+
+    <div class="input-section" id="inputSection">
+      <input type="text" class="name-input" id="nameInput" placeholder="이름을 입력하세요" maxlength="20" autocomplete="off">
+      <br>
+      <button class="read-btn" id="readBtn" onclick="readPastLife()">전생 보기</button>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="crystal-ball">🔮</div>
+      <p class="loading-text">전생의 기억을 불러오는 중...</p>
+    </div>
+
+    <div class="error" id="error"></div>
+
+    <div class="result" id="result">
+      <div class="result-card">
+        <div class="result-header">
+          <div class="result-name" id="resultName"></div>
+          <div class="result-label">님의 전생</div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-emoji">📅</div>
+            <div class="info-label">시대</div>
+            <div class="info-value" id="resultEra"></div>
+          </div>
+          <div class="info-item">
+            <div class="info-emoji">🗓️</div>
+            <div class="info-label">년도</div>
+            <div class="info-value" id="resultYear"></div>
+          </div>
+          <div class="info-item">
+            <div class="info-emoji">👤</div>
+            <div class="info-label">존재 / 직업</div>
+            <div class="info-value" id="resultOccupation"></div>
+          </div>
+          <div class="info-item">
+            <div class="info-emoji">💀</div>
+            <div class="info-label">사인</div>
+            <div class="info-value" id="resultDeath"></div>
+          </div>
+        </div>
+
+        <div class="story-section" id="resultStory"></div>
+
+        <div class="btn-group">
+          <button class="share-btn" onclick="shareResult()">📤 공유하기</button>
+          <button class="copy-btn" onclick="copyResult()">📋 복사하기</button>
+          <button class="retry-btn" onclick="retry()">🔄 다시 보기</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      ※ 본 서비스는 재미를 위한 것이며 실제 전생과는 무관합니다 😉
+    </footer>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Stars background
+    const starsContainer = document.getElementById('stars');
+    for (let i = 0; i < 100; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.style.left = Math.random() * 100 + '%';
+      star.style.top = Math.random() * 100 + '%';
+      star.style.setProperty('--duration', (1 + Math.random() * 3) + 's');
+      star.style.animationDelay = Math.random() * 3 + 's';
+      starsContainer.appendChild(star);
+    }
+
+    let currentResult = null;
+
+    const nameInput = document.getElementById('nameInput');
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') readPastLife();
+    });
+
+    async function readPastLife() {
+      const name = nameInput.value.trim();
+      if (!name) {
+        nameInput.focus();
+        nameInput.style.borderColor = '#ff6666';
+        setTimeout(() => nameInput.style.borderColor = '', 1000);
+        return;
+      }
+
+      const btn = document.getElementById('readBtn');
+      btn.disabled = true;
+
+      document.getElementById('result').classList.remove('show');
+      document.getElementById('error').classList.remove('show');
+      document.getElementById('loading').classList.add('show');
+
+      try {
+        const res = await fetch('/api/read-past-life', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || '오류가 발생했습니다');
+
+        currentResult = data;
+
+        document.getElementById('resultName').textContent = data.name;
+        document.getElementById('resultEra').textContent = data.era;
+        document.getElementById('resultYear').textContent = data.year;
+        document.getElementById('resultOccupation').textContent =
+          `${data.occupation} (${data.occupationCategory})`;
+        document.getElementById('resultDeath').textContent = data.death;
+        document.getElementById('resultStory').textContent = data.story;
+
+        document.getElementById('loading').classList.remove('show');
+        document.getElementById('result').classList.add('show');
+      } catch (err) {
+        document.getElementById('loading').classList.remove('show');
+        const errorEl = document.getElementById('error');
+        errorEl.textContent = err.message;
+        errorEl.classList.add('show');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function getShareText() {
+      if (!currentResult) return '';
+      return `🔮 전생 리더기 결과 🔮
+
+이름: ${currentResult.name}
+시대: ${currentResult.era} (${currentResult.year})
+존재/직업: ${currentResult.occupation} (${currentResult.occupationCategory})
+사인: ${currentResult.death}
+
+${currentResult.story}
+
+👉 나도 전생 알아보기: ${window.location.href}`;
+    }
+
+    function shareResult() {
+      const text = getShareText();
+
+      if (navigator.share) {
+        navigator.share({ title: '전생 리더기 결과', text })
+          .catch(() => {});
+      } else {
+        copyToClipboard(text);
+        showToast('공유 텍스트가 클립보드에 복사되었습니다!');
+      }
+    }
+
+    function copyResult() {
+      copyToClipboard(getShareText());
+      showToast('결과가 복사되었습니다!');
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function retry() {
+      document.getElementById('result').classList.remove('show');
+      nameInput.focus();
+      nameInput.select();
+    }
+  </script>
+</body>
+</html>
